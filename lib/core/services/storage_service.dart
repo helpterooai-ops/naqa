@@ -16,7 +16,7 @@ class StorageInfoData {
 }
 
 class StorageService {
-  // إنشاء كائن المكتبة للاستخدام
+  // إنشاء كائن ثابت من المكتبة
   static final DiskSpacePlus _diskSpacePlus = DiskSpacePlus();
 
   // طلب تصاريح الوصول للتخزين والصور من أندرويد
@@ -35,9 +35,9 @@ class StorageService {
   // قراءة ذاكرة الهاتف الحقيقية وتحويلها إلى جيجابايت
   static Future<StorageInfoData> getRealStorageInfo() async {
     try {
-      // استدعاء الدوال من كائن المكتبة
-      double? freeMB = await _diskSpacePlus.getFreeDiskSpace();
-      double? totalMB = await _diskSpacePlus.getTotalDiskSpace();
+      // getFreeDiskSpace و getTotalDiskSpace هما Getters يُستدعيان بدون أقواس ()
+      double? freeMB = await _diskSpacePlus.getFreeDiskSpace;
+      double? totalMB = await _diskSpacePlus.getTotalDiskSpace;
 
       if (totalMB != null && freeMB != null && totalMB > 0) {
         double totalGB = totalMB / 1024.0;
