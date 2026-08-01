@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/services.dart';
 import 'core/constants/app_colors.dart';
 import 'features/splash/screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ضبط شريط النظام العلوي والسفلي ليتوافق مع التصميم المظلم الفاخر
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: AppColors.backgroundDark,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
+
   runApp(const NaqaApp());
 }
 
@@ -14,20 +25,17 @@ class NaqaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'نَقا',
+      title: 'نقـــا',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: AppColors.backgroundDark,
         fontFamily: 'IBMPlexSansArabic',
+        colorScheme: const ColorScheme.dark(
+          primary: AppColors.accent,
+          surface: AppColors.cardDark,
+        ),
       ),
-      locale: const Locale('ar', ''),
-      supportedLocales: const [Locale('ar', '')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
       home: const SplashScreen(),
     );
   }

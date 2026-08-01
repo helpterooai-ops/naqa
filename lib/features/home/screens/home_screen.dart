@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/storage_service.dart';
+import '../../../core/widgets/glass_container.dart';
+import '../../cleaner/screens/smart_cleaner_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
             'نَقـــا',
             style: TextStyle(
               fontFamily: 'IBMPlexSansArabic',
-              fontSize: 26,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: AppColors.accent,
               letterSpacing: 2.0,
@@ -68,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // بطاقة التخزين الحقيقية من الجوال
+            // بطاقة التخزين الزجاجية الفاخرة
             _buildRealStorageSummaryCard(),
 
             const SizedBox(height: 28),
@@ -84,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
 
+            // شبكة التصنيف الذكي المربوطة بالشاشات الحقيقية
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -92,11 +95,19 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSpacing: 14,
               childAspectRatio: 1.25,
               children: [
-                _buildCategoryCard(
-                  title: 'الصور والفيديو',
-                  subtitle: 'معرض الجوال',
-                  icon: Icons.photo_library_outlined,
-                  color: const Color(0xFF1B3B36),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SmartCleanerScreen()),
+                    );
+                  },
+                  child: _buildCategoryCard(
+                    title: 'الصور والفيديو',
+                    subtitle: 'معرض الجوال الحقيقي',
+                    icon: Icons.photo_library_outlined,
+                    color: const Color(0xFF1B3B36),
+                  ),
                 ),
                 _buildCategoryCard(
                   title: 'الخزنة المشفرة',
@@ -111,11 +122,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: Icons.insert_drive_file_outlined,
                   color: const Color(0xFF1B3B36),
                 ),
-                _buildCategoryCard(
-                  title: 'التنظيف الذكي',
-                  subtitle: 'تفريغ المساحة',
-                  icon: Icons.cleaning_services_outlined,
-                  color: const Color(0xFF1B3B36),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SmartCleanerScreen()),
+                    );
+                  },
+                  child: _buildCategoryCard(
+                    title: 'التنظيف الذكي',
+                    subtitle: 'تفريغ المساحة بالسحب',
+                    icon: Icons.cleaning_services_outlined,
+                    color: const Color(0xFF1B3B36),
+                  ),
                 ),
               ],
             ),
@@ -126,23 +145,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRealStorageSummaryCard() {
-    return Container(
+    return GlassContainer(
+      borderRadius: 24,
+      blur: 15,
       padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1B3B36),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.accent.withOpacity(0.3),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -171,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   '${_storageData?.usedSpaceGB ?? 0} GB / ${_storageData?.totalSpaceGB ?? 0} GB',
                   style: const TextStyle(
                     fontFamily: 'IBMPlexSansArabic',
-                    fontSize: 22,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -208,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
         border: Border.all(
           color: isAccent
               ? AppColors.accent.withOpacity(0.6)
-              : Colors.white.withOpacity(0.05),
+              : const Color(0xFFD4AF37).withOpacity(0.15),
           width: 1,
         ),
       ),
