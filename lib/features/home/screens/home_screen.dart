@@ -104,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const AlbumSelectionScreen()),
+                          builder: (context) => AlbumSelectionScreen()),
                     );
                   },
                   child: _buildCategoryCard(
@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const AlbumSelectionScreen()),
+                          builder: (context) => AlbumSelectionScreen()),
                     );
                   },
                   child: _buildCategoryCard(
