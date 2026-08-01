@@ -32,8 +32,9 @@ class StorageService {
   // قراءة ذاكرة الهاتف الحقيقية وتحويلها إلى جيجابايت
   static Future<StorageInfoData> getRealStorageInfo() async {
     try {
-      double? freeMB = await DiskSpacePlus.getFreeDiskSpace;
-      double? totalMB = await DiskSpacePlus.getTotalDiskSpace;
+      // إضافة أقواس التنفيذ () بعد اسم الدالة
+      double? freeMB = await DiskSpacePlus.getFreeDiskSpace();
+      double? totalMB = await DiskSpacePlus.getTotalDiskSpace();
 
       if (totalMB != null && freeMB != null && totalMB > 0) {
         double totalGB = totalMB / 1024.0;
