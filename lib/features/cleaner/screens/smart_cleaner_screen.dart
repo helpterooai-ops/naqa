@@ -5,48 +5,37 @@ import '../../../core/services/media_service.dart';
 import '../../../core/widgets/glass_container.dart';
 
 class SmartCleanerScreen extends StatefulWidget {
-  const SmartCleanerScreen({super.key});
+  final MediaAlbum album;
+
+  const SmartCleanerScreen({
+    super.key,
+    required this.album,
+  });
 
   @override
   State<SmartCleanerScreen> createState() => _SmartCleanerScreenState();
 }
 
 class _SmartCleanerScreenState extends State<SmartCleanerScreen> {
-  int _selectedFilterIndex = 0;
-  final List<String> _filters = ['الكل', 'لقطات الشاشة', 'الحجم الكبـير'];
-
-  List<LocalMediaFile> _realMediaList = [];
+  late List<LocalMediaFile> _mediaList;
   final List<LocalMediaFile> _markedForDeletion = [];
-  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadRealMedia();
-  }
-
-  Future<void> _loadRealMedia() async {
-    setState(() => _isLoading = true);
-    String currentFilter = _filters[_selectedFilterIndex];
-    List<LocalMediaFile> files = await MediaService.fetchRealMediaFiles(filter: currentFilter);
-    if (mounted) {
-      setState(() {
-        _realMediaList = files;
-        _isLoading = false;
-      });
-    }
+    _mediaList = List.from(widget.album.files);
   }
 
   void _onSwipeLeft(LocalMediaFile file) {
     setState(() {
       _markedForDeletion.add(file);
-      _realMediaList.removeWhere((item) => item.path == file.path);
+      _mediaList.removeWhere((item) => item.path == file.path);
     });
   }
 
   void _onSwipeRight(LocalMediaFile file) {
     setState(() {
-      _realMediaList.removeWhere((item) => item.path == file.path);
+      _mediaList.removeWhere((item) => item.path == file.path);
     });
   }
 
@@ -61,11 +50,11 @@ class _SmartCleanerScreenState extends State<SmartCleanerScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.accent),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'التنظيف الذكـي الحقيقي',
-          style: TextStyle(
+        title: Text(
+          widget.album.title,
+          style: const TextStyle(
             fontFamily: 'IBMPlexSansArabic',
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
@@ -76,118 +65,81 @@ class _SmartCleanerScreenState extends State<SmartCleanerScreen> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            _buildFilterBar(),
-            const SizedBox(height: 20),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text(
-                    '👈 سحب لليسار: حذف',
-                    style: TextStyle(
-                      fontFamily: 'IBMPlexSansArabic',
-                      color: Colors.redAccent,
-                      fontSize: 12,
-                    ),
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.close_rounded, color: Colors.redAccent, size: 16),
+                      SizedBox(width: 4),
+                      Text(
+                        'سحب لليسار: حذف',
+                        style: TextStyle(
+                          fontFamily: 'IBMPlexSansArabic',
+                          color: Colors.redAccent,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    'سحب لليمين: إبقاء 👉',
-                    style: TextStyle(
-                      fontFamily: 'IBMPlexSansArabic',
-                      color: AppColors.accent,
-                      fontSize: 12,
-                    ),
+                  Row(
+                    children: const [
+                      Text(
+                        'سحب لليمين: إبقاء',
+                        style: TextStyle(
+                          fontFamily: 'IBMPlexSansArabic',
+                          color: AppColors.accent,
+                          fontSize: 12,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.check_rounded, color: AppColors.accent, size: 16),
+                    ],
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 15),
 
             Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: AppColors.accent),
-                    )
-                  : _realMediaList.isEmpty
-                      ? _buildEmptyState()
-                      : Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                            child: Dismissible(
-                              key: Key(_realMediaList.last.path),
-                              onDismissed: (direction) {
-                                final item = _realMediaList.last;
-                                if (direction == DismissDirection.endToStart) {
-                                  _onSwipeLeft(item);
-                                } else {
-                                  _onSwipeRight(item);
-                                }
-                              },
-                              background: _buildSwipeIndicator(
-                                alignment: Alignment.centerLeft,
-                                icon: Icons.check_circle_outline_rounded,
-                                color: AppColors.accent,
-                                label: 'إبقــاء',
-                              ),
-                              secondaryBackground: _buildSwipeIndicator(
-                                alignment: Alignment.centerRight,
-                                icon: Icons.delete_outline_rounded,
-                                color: Colors.redAccent,
-                                label: 'حــذف',
-                              ),
-                              child: _buildFloatingPhotoCard(_realMediaList.last),
-                            ),
+              child: _mediaList.isEmpty
+                  ? _buildEmptyState()
+                  : Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Dismissible(
+                          key: Key(_mediaList.last.path),
+                          onDismissed: (direction) {
+                            final item = _mediaList.last;
+                            if (direction == DismissDirection.endToStart) {
+                              _onSwipeLeft(item);
+                            } else {
+                              _onSwipeRight(item);
+                            }
+                          },
+                          background: _buildSwipeIndicator(
+                            alignment: Alignment.centerLeft,
+                            icon: Icons.check_circle_outline_rounded,
+                            color: Colors.tealAccent,
+                            label: 'إبقــاء',
                           ),
+                          secondaryBackground: _buildSwipeIndicator(
+                            alignment: Alignment.centerRight,
+                            icon: Icons.highlight_off_rounded,
+                            color: Colors.redAccent,
+                            label: 'حــذف',
+                          ),
+                          child: _buildFloatingPhotoCard(_mediaList.last),
                         ),
+                      ),
+                    ),
             ),
 
             if (_markedForDeletion.isNotEmpty) _buildBottomActionBar(),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildFilterBar() {
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _filters.length,
-        itemBuilder: (context, index) {
-          final isSelected = _selectedFilterIndex == index;
-          return GestureDetector(
-            onTap: () {
-              setState(() => _selectedFilterIndex = index);
-              _loadRealMedia();
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.only(left: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.accent : Colors.white.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isSelected ? AppColors.accent : const Color(0xFFD4AF37).withOpacity(0.2),
-                ),
-              ),
-              child: Text(
-                _filters[index],
-                style: TextStyle(
-                  fontFamily: 'IBMPlexSansArabic',
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? AppColors.backgroundDark : Colors.white70,
-                ),
-              ),
-            ),
-          );
-        },
       ),
     );
   }
@@ -207,9 +159,11 @@ class _SmartCleanerScreenState extends State<SmartCleanerScreen> {
               child: Image.file(
                 File(media.path),
                 fit: BoxFit.cover,
+                cacheWidth: 600,
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: const Color(0xFF1B3B36),
-                  child: const Icon(Icons.broken_image_outlined, color: Colors.white38, size: 48),
+                  child: const Icon(Icons.broken_image_outlined,
+                      color: Colors.white38, size: 48),
                 ),
               ),
             ),
@@ -266,14 +220,15 @@ class _SmartCleanerScreenState extends State<SmartCleanerScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 42),
-          const SizedBox(height: 6),
+          Icon(icon, color: color, size: 48),
+          const SizedBox(height: 8),
           Text(
             label,
             style: TextStyle(
               fontFamily: 'IBMPlexSansArabic',
               color: color,
               fontWeight: FontWeight.bold,
+              fontSize: 14,
             ),
           ),
         ],
@@ -286,10 +241,11 @@ class _SmartCleanerScreenState extends State<SmartCleanerScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: const [
-          Icon(Icons.check_circle_outline_rounded, color: AppColors.accent, size: 64),
+          Icon(Icons.check_circle_outline_rounded,
+              color: AppColors.accent, size: 64),
           SizedBox(height: 16),
           Text(
-            'لا توجد صور متطابقة مع هذا الفلتر',
+            'اكتمال فرز جميع الصور في هذا الألبوم!',
             style: TextStyle(
               fontFamily: 'IBMPlexSansArabic',
               fontSize: 16,
@@ -330,7 +286,7 @@ class _SmartCleanerScreenState extends State<SmartCleanerScreen> {
               ),
               onPressed: _showConfirmationDialog,
               child: const Text(
-                'متابعة الحذف الفعلي',
+                'متابعة الحذف',
                 style: TextStyle(
                   fontFamily: 'IBMPlexSansArabic',
                   fontWeight: FontWeight.bold,
@@ -351,7 +307,7 @@ class _SmartCleanerScreenState extends State<SmartCleanerScreen> {
         backgroundColor: const Color(0xFF1B3B36),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
-          'تأكيد الحذف من الجوال',
+          'تأكيد الحذف النهائي',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'IBMPlexSansArabic',
@@ -370,7 +326,9 @@ class _SmartCleanerScreenState extends State<SmartCleanerScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(fontFamily: 'IBMPlexSansArabic', color: Colors.white38)),
+            child: const Text('إلغاء',
+                style: TextStyle(
+                    fontFamily: 'IBMPlexSansArabic', color: Colors.white38)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
@@ -383,12 +341,15 @@ class _SmartCleanerScreenState extends State<SmartCleanerScreen> {
               }
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('تم حذف $deletedCount ملفات بنجاح من جهازك')),
+                  SnackBar(
+                      content: Text('تم حذف $deletedCount ملفات بنجاح من جهازك')),
                 );
                 setState(() => _markedForDeletion.clear());
               }
             },
-            child: const Text('حذف الآن', style: TextStyle(fontFamily: 'IBMPlexSansArabic', color: Colors.white)),
+            child: const Text('حذف الآن',
+                style: TextStyle(
+                    fontFamily: 'IBMPlexSansArabic', color: Colors.white)),
           ),
         ],
       ),

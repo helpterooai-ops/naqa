@@ -16,77 +16,146 @@ class LocalMediaFile {
   });
 }
 
+class MediaAlbum {
+  final String id;
+  final String title;
+  final String path;
+  final int itemCount;
+  final double totalSizeMB;
+  final List<LocalMediaFile> files;
+
+  MediaAlbum({
+    required this.id,
+    required this.title,
+    required this.path,
+    required this.itemCount,
+    required this.totalSizeMB,
+    required this.files,
+  });
+}
+
 class MediaService {
-  // مسارات المجلدات الرئيسية في نظام أندرويد
-  static final List<String> _targetDirectories = [
-    '/storage/emulated/0/DCIM/Camera',
-    '/storage/emulated/0/Pictures',
-    '/storage/emulated/0/Pictures/Screenshots',
-    '/storage/emulated/0/Download',
-  ];
+  static final Map<String, List<String>> _albumFolderPaths = {
+    'screenshots': [
+      '/storage/emulated/0/Pictures/Screenshots',
+      '/storage/emulated/0/DCIM/Screenshots',
+    ],
+    'camera': [
+      '/storage/emulated/0/DCIM/Camera',
+    ],
+    'whatsapp': [
+      '/storage/emulated/0/Pictures/WhatsApp',
+      '/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images',
+    ],
+    'downloads': [
+      '/storage/emulated/0/Download',
+    ],
+    'pictures': [
+      '/storage/emulated/0/Pictures',
+    ],
+  };
 
-  // جلب كافة الصور والفيديوهات الحقيقية من الجوال
-  static Future<List<LocalMediaFile>> fetchRealMediaFiles({String filter = 'الكل'}) async {
-    List<LocalMediaFile> mediaList = [];
+  static Future<List<MediaAlbum>> fetchRealAlbums() async {
+    List<MediaAlbum> albums = [];
 
-    for (String dirPath in _targetDirectories) {
-      Directory dir = Directory(dirPath);
-      if (await dir.exists()) {
-        try {
-          List<FileSystemEntity> entities = dir.listSync(recursive: true);
-          for (var entity in entities) {
-            if (entity is File) {
-              String path = entity.path;
-              String lowerPath = path.toLowerCase();
+    var screenshots = await _scanFolders('screenshots', 'لقطات الشاشة', _albumFolderPaths['screenshots']!);
+    if (screenshots.files.isNotEmpty) albums.add(screenshots);
 
-              bool isImage = lowerPath.endsWith('.jpg') ||
-                  lowerPath.endsWith('.jpeg') ||
-                  lowerPath.endsWith('.png') ||
-                  lowerPath.endsWith('.webp');
+    var camera = await _scanFolders('camera', 'صور الكاميرا', _albumFolderPaths['camera']!);
+    if (camera.files.isNotEmpty) albums.add(camera);
 
-              bool isVideo = lowerPath.endsWith('.mp4') ||
-                  lowerPath.endsWith('.mkv') ||
-                  lowerPath.endsWith('.mov');
+    var whatsapp = await _scanFolders('whatsapp', 'صور الواتساب', _albumFolderPaths['whatsapp']!);
+    if (whatsapp.files.isNotEmpty) albums.add(whatsapp);
 
-              bool isScreenshot = lowerPath.contains('screenshot') ||
-                  lowerPath.contains('screen_shot') ||
-                  path.contains('Screenshots');
+    var downloads = await _scanFolders('downloads', 'التحميلات', _albumFolderPaths['downloads']!);
+    if (downloads.files.isNotEmpty) albums.add(downloads);
 
-              // تطبيق الفلترة حسب الخيار المحدد
-              if (filter == 'لقطات الشاشة' && !isScreenshot) continue;
-              if (filter == 'الصور' && !isImage) continue;
-              if (filter == 'الفيديو' && !isVideo) continue;
+    var pictures = await _scanFolders('pictures', 'جميع الصور', _albumFolderPaths['pictures']!);
+    if (pictures.files.isNotEmpty) albums.add(pictures);
 
-              if (isImage || isVideo) {
-                int bytes = await entity.length();
-                double sizeMB = bytes / (1024 * 1024);
-
-                if (filter == 'الحجم الكبـير' && sizeMB < 5.0) continue;
-
-                mediaList.add(
-                  LocalMediaFile(
-                    path: entity.path,
-                    name: entity.path.split('/').last,
-                    sizeMB: double.parse(sizeMB.toStringAsFixed(1)),
-                    isVideo: isVideo,
-                    modifiedDate: entity.lastModifiedSync(),
-                  ),
-                );
-              }
-            }
-          }
-        } catch (_) {
-          // في حال عدم وجود تصريح لمجلد معين يتخطاه بسلاسة
+    List<LocalMediaFile> largeFiles = [];
+    double largeTotalMB = 0;
+    for (var album in albums) {
+      for (var file in album.files) {
+        if (file.sizeMB >= 10.0) {
+          largeFiles.add(file);
+          largeTotalMB += file.sizeMB;
         }
       }
     }
+    if (largeFiles.isNotEmpty) {
+      albums.insert(
+        0,
+        MediaAlbum(
+          id: 'large',
+          title: 'الملفات الكبيرة (+10MB)',
+          path: 'large_files',
+          itemCount: largeFiles.length,
+          totalSizeMB: double.parse(largeTotalMB.toStringAsFixed(1)),
+          files: largeFiles,
+        ),
+      );
+    }
 
-    // ترتيب الملفات من الأحدث إلى الأقدم
-    mediaList.sort((a, b) => b.modifiedDate.compareTo(a.modifiedDate));
-    return mediaList;
+    return albums;
   }
 
-  // حذف ملف حقيقي من ذاكرة الجهاز
+  static Future<MediaAlbum> _scanFolders(String id, String title, List<String> paths) async {
+    List<LocalMediaFile> files = [];
+    double totalMB = 0;
+
+    for (String path in paths) {
+      Directory dir = Directory(path);
+      if (await dir.exists()) {
+        try {
+          await for (FileSystemEntity entity in dir.list(recursive: false, followLinks: false)) {
+            if (entity is File) {
+              String filePath = entity.path;
+              String lower = filePath.toLowerCase();
+
+              bool isImage = lower.endsWith('.jpg') ||
+                  lower.endsWith('.jpeg') ||
+                  lower.endsWith('.png') ||
+                  lower.endsWith('.webp');
+
+              bool isVideo = lower.endsWith('.mp4') ||
+                  lower.endsWith('.mkv') ||
+                  lower.endsWith('.mov');
+
+              if (isImage || isVideo) {
+                try {
+                  int bytes = entity.lengthSync();
+                  double size = bytes / (1024 * 1024);
+                  totalMB += size;
+
+                  files.add(LocalMediaFile(
+                    path: filePath,
+                    name: filePath.split('/').last,
+                    sizeMB: double.parse(size.toStringAsFixed(1)),
+                    isVideo: isVideo,
+                    modifiedDate: entity.lastModifiedSync(),
+                  ));
+                } catch (_) {}
+              }
+            }
+            if (files.length >= 150) break;
+          }
+        } catch (_) {}
+      }
+    }
+
+    files.sort((a, b) => b.modifiedDate.compareTo(a.modifiedDate));
+
+    return MediaAlbum(
+      id: id,
+      title: title,
+      path: paths.first,
+      itemCount: files.length,
+      totalSizeMB: double.parse(totalMB.toStringAsFixed(1)),
+      files: files,
+    );
+  }
+
   static Future<bool> deleteRealFile(String filePath) async {
     try {
       File file = File(filePath);

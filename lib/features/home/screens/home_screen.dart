@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/widgets/glass_container.dart';
-import '../../cleaner/screens/smart_cleaner_screen.dart';
+import '../../cleaner/screens/album_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,6 +30,15 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  Color _getStorageStatusColor(double percentage) {
+    if (percentage > 0.85) {
+      return Colors.redAccent;
+    } else if (percentage > 0.60) {
+      return Colors.orangeAccent;
+    }
+    return AppColors.accent;
   }
 
   @override
@@ -70,13 +79,10 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // بطاقة التخزين الزجاجية الفاخرة
             _buildRealStorageSummaryCard(),
-
             const SizedBox(height: 28),
-
             const Text(
-              'التصنيف الذكي',
+              'التصنيف والفرز الذكي',
               style: TextStyle(
                 fontFamily: 'IBMPlexSansArabic',
                 fontSize: 18,
@@ -85,8 +91,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // شبكة التصنيف الذكي المربوطة بالشاشات الحقيقية
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -99,12 +103,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const SmartCleanerScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const AlbumSelectionScreen()),
                     );
                   },
                   child: _buildCategoryCard(
                     title: 'الصور والفيديو',
-                    subtitle: 'معرض الجوال الحقيقي',
+                    subtitle: 'عرض ألبومات المعرض',
                     icon: Icons.photo_library_outlined,
                     color: const Color(0xFF1B3B36),
                   ),
@@ -126,12 +131,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const SmartCleanerScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const AlbumSelectionScreen()),
                     );
                   },
                   child: _buildCategoryCard(
                     title: 'التنظيف الذكي',
-                    subtitle: 'تفريغ المساحة بالسحب',
+                    subtitle: 'فرز الملفات والألبومات',
                     icon: Icons.cleaning_services_outlined,
                     color: const Color(0xFF1B3B36),
                   ),
@@ -145,6 +151,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRealStorageSummaryCard() {
+    final usagePercent = _storageData?.usagePercentage ?? 0.0;
+    final statusColor = _getStorageStatusColor(usagePercent);
+
     return GlassContainer(
       borderRadius: 24,
       blur: 15,
@@ -154,8 +163,8 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
+            children: [
+              const Text(
                 'ذاكرة الهاتف الفعليه',
                 style: TextStyle(
                   fontFamily: 'IBMPlexSansArabic',
@@ -163,35 +172,46 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.white70,
                 ),
               ),
-              Icon(Icons.sd_storage_rounded, color: AppColors.accent, size: 20),
+              Icon(Icons.sd_storage_rounded, color: statusColor, size: 22),
             ],
           ),
           const SizedBox(height: 12),
-
           _isLoading
               ? const Padding(
                   padding: EdgeInsets.symmetric(vertical: 10),
                   child: CircularProgressIndicator(color: AppColors.accent),
                 )
-              : Text(
-                  '${_storageData?.usedSpaceGB ?? 0} GB / ${_storageData?.totalSpaceGB ?? 0} GB',
-                  style: const TextStyle(
-                    fontFamily: 'IBMPlexSansArabic',
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '${_storageData?.usedSpaceGB ?? 0} GB',
+                      style: TextStyle(
+                        fontFamily: 'IBMPlexSansArabic',
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: statusColor,
+                      ),
+                    ),
+                    Text(
+                      ' / ${_storageData?.totalSpaceGB ?? 0} GB',
+                      style: const TextStyle(
+                        fontFamily: 'IBMPlexSansArabic',
+                        fontSize: 16,
+                        color: Colors.white54,
+                      ),
+                    ),
+                  ],
                 ),
-
           const SizedBox(height: 14),
-
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
-              value: _storageData?.usagePercentage ?? 0.0,
+              value: usagePercent,
               minHeight: 8,
               backgroundColor: Colors.black26,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accent),
+              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
             ),
           ),
         ],
