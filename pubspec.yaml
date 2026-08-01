@@ -14,7 +14,7 @@ dependencies:
   permission_handler: ^11.3.1
   disk_space_plus: ^0.2.1
   path_provider: ^2.1.2
-  intl: ^0.19.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
