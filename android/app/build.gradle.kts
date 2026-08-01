@@ -4,17 +4,6 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-val localProperties = java.util.Properties()
-val localPropertiesFile = rootProject.file("local.properties")
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.reader().use { reader ->
-        localProperties.load(reader)
-    }
-}
-
-val flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "1"
-val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
-
 android {
     namespace = "com.aldar.net"
     compileSdk = flutter.compileSdkVersion
@@ -29,20 +18,16 @@ android {
         jvmTarget = "1.8"
     }
 
-    sourceSets {
-        getByName("main").java.srcDirs("src/main/kotlin")
-    }
-
     defaultConfig {
         applicationId = "com.aldar.net"
-        minSdk = 21 // مطلوب لـ Firebase
+        minSdk = 21
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutterVersionCode.toInt()
-        versionName = flutterVersionName
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
     }
 
     buildTypes {
-        getByName("release") {
+        release {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -52,10 +37,5 @@ flutter {
     source = "../.."
 }
 
-dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0")
-    // يمكن إضافة حزم فايربيس الخاصة بالأندرويد هنا لاحقاً إذا تطلب الأمر
-}
-
-// التفعيل الصحيح لخدمات جوجل (يجب أن يكون في الأسفل)
+// ضروري لتفعيل Firebase
 apply(plugin = "com.google.gms.google-services")
