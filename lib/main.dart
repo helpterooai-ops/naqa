@@ -1,41 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:aether_file/core/constants/app_colors.dart';
-import 'package:aether_file/features/splash/screens/splash_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+// سنضيف لاحقاً استيراد firebase_options.dart بعد التأكد من وجوده
 
-void main() {
+void main() async {
+  // تأكد من تهيئة Flutter قبل تشغيل Firebase
   WidgetsFlutterBinding.ensureInitialized();
 
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: AppColors.backgroundDark,
-      systemNavigationBarIconBrightness: Brightness.light,
-    ),
-  );
+  // تهيئة Firebase (حالياً بدون خيارات منصة)
+  await Firebase.initializeApp();
 
-  runApp(const NaqaApp());
+  runApp(const AldarNetApp());
 }
 
-class NaqaApp extends StatelessWidget {
-  const NaqaApp({super.key});
+class AldarNetApp extends StatelessWidget {
+  const AldarNetApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'نقـــا',
+      title: 'الدار نت',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        useMaterial3: true,
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppColors.backgroundDark,
         fontFamily: 'IBMPlexSansArabic',
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.accent,
-          surface: AppColors.cardDark,
+      ),
+      home: const Scaffold(
+        body: Center(
+          child: Text(
+            'Firebase متصل ✅',
+            style: TextStyle(fontSize: 24, color: Colors.green),
+          ),
         ),
       ),
-      home: const SplashScreen(),
     );
   }
 }
