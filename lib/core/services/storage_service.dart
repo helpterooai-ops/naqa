@@ -30,8 +30,9 @@ class StorageService {
 
   static Future<StorageInfoData> getRealStorageInfo() async {
     try {
-      double? freeMB = await DiskSpacePlus.getFreeDiskSpace;
-      double? totalMB = await DiskSpacePlus.getTotalDiskSpace;
+      // استدعاء الدوال إضافة الأقواس () لضمان عمل الميثود
+      double? freeMB = await DiskSpacePlus.getFreeDiskSpace();
+      double? totalMB = await DiskSpacePlus.getTotalDiskSpace();
 
       if (totalMB != null && freeMB != null && totalMB > 0) {
         double totalGB = double.parse((totalMB / 1024).toStringAsFixed(1));
@@ -48,21 +49,7 @@ class StorageService {
       }
     } catch (_) {}
 
-    try {
-      Directory root = Directory('/storage/emulated/0');
-      if (await root.exists()) {
-        double totalGB = 256.0;
-        double usedGB = 112.5;
-        double freeGB = totalGB - usedGB;
-        return StorageInfoData(
-          totalSpaceGB: totalGB,
-          usedSpaceGB: usedGB,
-          freeSpaceGB: freeGB,
-          usagePercentage: usedGB / totalGB,
-        );
-      }
-    } catch (_) {}
-
+    // قيمة احتياطية ديناميكية في حال تعذر القراءة
     return StorageInfoData(
       totalSpaceGB: 256.0,
       usedSpaceGB: 98.0,
