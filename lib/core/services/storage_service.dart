@@ -28,34 +28,45 @@ class StorageService {
     }
   }
 
+  // دالة تحويل مساحة النظام إلى مساحة الهاردوير الحقيقية المعروفة
+  static double _normalizeTotalSize(double rawTotalGB) {
+    if (rawTotalGB <= 32) return 32.0;
+    if (rawTotalGB <= 64) return 64.0;
+    if (rawTotalGB <= 128) return 128.0;
+    if (rawTotalGB <= 256) return 256.0;
+    if (rawTotalGB <= 512) return 512.0;
+    if (rawTotalGB <= 1024) return 1024.0;
+    return rawTotalGB;
+  }
+
   static Future<StorageInfoData> getRealStorageInfo() async {
     try {
-      // إنشاء كائن من المكتبة لاستدعاء الخصائص بالشكل الصحيح
       final diskSpace = DiskSpacePlus();
       double? freeMB = await diskSpace.getFreeDiskSpace;
       double? totalMB = await diskSpace.getTotalDiskSpace;
 
       if (totalMB != null && freeMB != null && totalMB > 0) {
-        double totalGB = double.parse((totalMB / 1024).toStringAsFixed(1));
-        double freeGB = double.parse((freeMB / 1024).toStringAsFixed(1));
-        double usedGB = double.parse((totalGB - freeGB).toStringAsFixed(1));
-        double percentage = (usedGB / totalGB).clamp(0.0, 1.0);
+        double rawTotalGB = totalMB / 1024;
+        double rawFreeGB = freeMB / 1024;
+        
+        double hardwareTotalGB = _normalizeTotalSize(rawTotalGB);
+        double actualUsedGB = (hardwareTotalGB - rawFreeGB).clamp(0.0, hardwareTotalGB);
+        double percentage = (actualUsedGB / hardwareTotalGB).clamp(0.0, 1.0);
 
         return StorageInfoData(
-          totalSpaceGB: totalGB,
-          usedSpaceGB: usedGB,
-          freeSpaceGB: freeGB,
+          totalSpaceGB: double.parse(hardwareTotalGB.toStringAsFixed(1)),
+          usedSpaceGB: double.parse(actualUsedGB.toStringAsFixed(1)),
+          freeSpaceGB: double.parse(rawFreeGB.toStringAsFixed(1)),
           usagePercentage: percentage,
         );
       }
     } catch (_) {}
 
-    // قيمة احتياطية في حال تعذر القراءة
     return StorageInfoData(
       totalSpaceGB: 256.0,
-      usedSpaceGB: 98.0,
-      freeSpaceGB: 158.0,
-      usagePercentage: 0.38,
+      usedSpaceGB: 0.0,
+      freeSpaceGB: 256.0,
+      usagePercentage: 0.0,
     );
   }
 }

@@ -3,6 +3,9 @@ import 'package:aether_file/core/constants/app_colors.dart';
 import 'package:aether_file/core/services/storage_service.dart';
 import 'package:aether_file/core/widgets/glass_container.dart';
 import 'package:aether_file/features/cleaner/screens/album_selection_screen.dart';
+import 'package:aether_file/features/cleaner/screens/junk_scanner_screen.dart';
+import 'package:aether_file/core/services/media_service.dart';
+import 'package:aether_file/features/cleaner/screens/smart_cleaner_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,13 +35,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Color _getStorageStatusColor(double percentage) {
-    if (percentage > 0.85) {
-      return AppColors.rubyDelete;
-    } else if (percentage > 0.60) {
-      return Colors.orangeAccent;
+  void _navigateToPhotosOnly() async {
+    var albums = await MediaService.fetchComprehensiveAlbums();
+    var photoAlbum = albums.firstWhere((a) => a.id == 'photos', orElse: () => MediaAlbum(id: 'photos', title: 'الصور', iconType: 'photo', itemCount: 0, totalSizeMB: 0, files: []));
+    if (mounted) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => SmartCleanerScreen(album: photoAlbum)));
     }
-    return AppColors.accent;
   }
 
   @override
@@ -51,51 +53,17 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: false,
         title: const Padding(
           padding: EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text(
-            'نَقـــا',
-            style: TextStyle(
-              fontFamily: 'IBMPlexSansArabic',
-              fontSize: 30,
-              fontWeight: FontWeight.bold,
-              color: AppColors.accent,
-              letterSpacing: 2.0,
-            ),
-          ),
+          child: Text('نَقـــا', style: TextStyle(fontFamily: 'IBMPlexSansArabic', fontSize: 30, fontWeight: FontWeight.bold, color: AppColors.accent)),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.accent),
-            onPressed: () {
-              setState(() => _isLoading = true);
-              _initDeviceData();
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildRealStorageSummaryCard(),
             const SizedBox(height: 28),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
-                  'استوديو التنظيف والفرز الذكي',
-                  style: TextStyle(
-                    fontFamily: 'IBMPlexSansArabic',
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Icon(Icons.auto_awesome_rounded, color: AppColors.accent, size: 20),
-              ],
-            ),
+            const Text('استوديو التنظيف والفرز الذكي', style: TextStyle(fontFamily: 'IBMPlexSansArabic', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 16),
             GridView.count(
               shrinkWrap: true,
@@ -106,50 +74,18 @@ class _HomeScreenState extends State<HomeScreen> {
               childAspectRatio: 1.18,
               children: [
                 GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AlbumSelectionScreen(),
-                      ),
-                    );
-                  },
-                  child: _buildCategoryCard(
-                    title: 'استوديو التنظيف',
-                    subtitle: 'فرز الميديا والملفات',
-                    icon: Icons.cleaning_services_rounded,
-                    color: AppColors.cardDark,
-                    isAccent: true,
-                  ),
+                  onTap: _navigateToPhotosOnly,
+                  child: _buildCategoryCard('الصور والألبومات', 'تنظيف عبر السحب', Icons.photo_library_rounded, AppColors.cardDark, isAccent: true),
                 ),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AlbumSelectionScreen(),
-                      ),
-                    );
-                  },
-                  child: _buildCategoryCard(
-                    title: 'الصور والألبومات',
-                    subtitle: 'معاينة وسحب سلس',
-                    icon: Icons.photo_library_rounded,
-                    color: AppColors.cardDark,
-                  ),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AlbumSelectionScreen())),
+                  child: _buildCategoryCard('التنظيف المتخصص', 'باقي الملفات', Icons.folder_copy_rounded, AppColors.cardDark),
                 ),
-                _buildCategoryCard(
-                  title: 'الخزنة المشفرة',
-                  subtitle: 'حماية بالبصمة',
-                  icon: Icons.lock_outline_rounded,
-                  color: AppColors.cardDarkSecondary,
+                GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const JunkScannerScreen())),
+                  child: _buildCategoryCard('تنظيف المخلفات', 'ملفات النظام المؤقتة', Icons.cleaning_services_rounded, AppColors.cardDark),
                 ),
-                _buildCategoryCard(
-                  title: 'حالة الذاكرة',
-                  subtitle: 'فحص عميق ومباشر',
-                  icon: Icons.pie_chart_outline_rounded,
-                  color: AppColors.cardDarkSecondary,
-                ),
+                _buildCategoryCard('الخزنة المشفرة', 'قريباً', Icons.lock_outline_rounded, AppColors.cardDarkSecondary),
               ],
             ),
           ],
@@ -160,131 +96,45 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildRealStorageSummaryCard() {
     final usagePercent = _storageData?.usagePercentage ?? 0.0;
-    final statusColor = _getStorageStatusColor(usagePercent);
-
     return GlassContainer(
       borderRadius: 26,
-      blur: 20,
       padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'سعة ذاكرة النظام الحقيقية',
-                style: TextStyle(
-                  fontFamily: 'IBMPlexSansArabic',
-                  fontSize: 14,
-                  color: Colors.white70,
-                ),
-              ),
-              Icon(Icons.sd_storage_rounded, color: statusColor, size: 22),
-            ],
-          ),
+          const Text('سعة ذاكرة النظام الحقيقية', style: TextStyle(fontFamily: 'IBMPlexSansArabic', fontSize: 14, color: Colors.white70)),
           const SizedBox(height: 12),
           _isLoading
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: CircularProgressIndicator(color: AppColors.accent),
-                )
+              ? const CircularProgressIndicator(color: AppColors.accent)
               : Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text(
-                      '${_storageData?.usedSpaceGB ?? 0} GB',
-                      style: TextStyle(
-                        fontFamily: 'IBMPlexSansArabic',
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: statusColor,
-                      ),
-                    ),
-                    Text(
-                      ' / ${_storageData?.totalSpaceGB ?? 0} GB مستخدمة',
-                      style: const TextStyle(
-                        fontFamily: 'IBMPlexSansArabic',
-                        fontSize: 14,
-                        color: Colors.white54,
-                      ),
-                    ),
+                    Text('${_storageData?.usedSpaceGB ?? 0} GB', style: const TextStyle(fontFamily: 'IBMPlexSansArabic', fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Text(' / ${_storageData?.totalSpaceGB ?? 0} GB', style: const TextStyle(fontFamily: 'IBMPlexSansArabic', fontSize: 14, color: Colors.white54)),
                   ],
                 ),
           const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: usagePercent,
-              minHeight: 8,
-              backgroundColor: Colors.black26,
-              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-            ),
-          ),
+          LinearProgressIndicator(value: usagePercent, minHeight: 8, backgroundColor: Colors.white12, valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accent)),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    bool isAccent = false,
-  }) {
+  Widget _buildCategoryCard(String title, String subtitle, IconData icon, Color color, {bool isAccent = false}) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: isAccent
-              ? AppColors.accent.withOpacity(0.7)
-              : const Color(0xFFD4AF37).withOpacity(0.15),
-          width: 1.2,
-        ),
-        boxShadow: isAccent
-            ? [
-                BoxShadow(
-                  color: AppColors.accent.withOpacity(0.12),
-                  blurRadius: 15,
-                  spreadRadius: 1,
-                ),
-              ]
-            : null,
-      ),
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(22), border: Border.all(color: isAccent ? AppColors.accent : Colors.white12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(
-            icon,
-            size: 28,
-            color: isAccent ? AppColors.accent : Colors.white70,
-          ),
+          Icon(icon, size: 28, color: isAccent ? AppColors.accent : Colors.white70),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'IBMPlexSansArabic',
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontFamily: 'IBMPlexSansArabic',
-                  fontSize: 11,
-                  color: isAccent ? AppColors.accent : Colors.white38,
-                ),
-              ),
+              Text(title, style: const TextStyle(fontFamily: 'IBMPlexSansArabic', fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text(subtitle, style: TextStyle(fontFamily: 'IBMPlexSansArabic', fontSize: 11, color: isAccent ? AppColors.accent : Colors.white38)),
             ],
           ),
         ],
