@@ -30,9 +30,10 @@ class StorageService {
 
   static Future<StorageInfoData> getRealStorageInfo() async {
     try {
-      // استدعاء الدوال إضافة الأقواس () لضمان عمل الميثود
-      double? freeMB = await DiskSpacePlus.getFreeDiskSpace();
-      double? totalMB = await DiskSpacePlus.getTotalDiskSpace();
+      // إنشاء كائن من المكتبة لاستدعاء الخصائص بالشكل الصحيح
+      final diskSpace = DiskSpacePlus();
+      double? freeMB = await diskSpace.getFreeDiskSpace;
+      double? totalMB = await diskSpace.getTotalDiskSpace;
 
       if (totalMB != null && freeMB != null && totalMB > 0) {
         double totalGB = double.parse((totalMB / 1024).toStringAsFixed(1));
@@ -49,7 +50,7 @@ class StorageService {
       }
     } catch (_) {}
 
-    // قيمة احتياطية ديناميكية في حال تعذر القراءة
+    // قيمة احتياطية في حال تعذر القراءة
     return StorageInfoData(
       totalSpaceGB: 256.0,
       usedSpaceGB: 98.0,
