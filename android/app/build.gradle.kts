@@ -53,7 +53,8 @@ flutter {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:${rootProject.extra["kotlin_version"]}")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0")
+    // يمكن إضافة حزم فايربيس الخاصة بالأندرويد هنا لاحقاً إذا تطلب الأمر
 }
 
 // التفعيل الصحيح لخدمات جوجل (يجب أن يكون في الأسفل)
