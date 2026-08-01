@@ -1,26 +1,19 @@
 plugins {
-    id "com.android.application"
-    id "kotlin-android"
-    id "dev.flutter.flutter-gradle-plugin"
+    id("com.android.application")
+    id("kotlin-android")
+    id("dev.flutter.flutter-gradle-plugin")
 }
 
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
+val localProperties = java.util.Properties()
+val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
+    localPropertiesFile.reader().use { reader ->
         localProperties.load(reader)
     }
 }
 
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-if (flutterVersionCode == null) {
-    flutterVersionCode = '1'
-}
-
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
-if (flutterVersionName == null) {
-    flutterVersionName = '1.0'
-}
+val flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "1"
+val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
 android {
     namespace = "com.aldar.net"
@@ -33,24 +26,24 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = "1.8"
     }
 
     sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
+        getByName("main").java.srcDirs("src/main/kotlin")
     }
 
     defaultConfig {
         applicationId = "com.aldar.net"
         minSdk = 21 // مطلوب لـ Firebase
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutterVersionCode.toInteger()
+        versionCode = flutterVersionCode.toInt()
         versionName = flutterVersionName
     }
 
     buildTypes {
-        release {
-            signingConfig = signingConfigs.debug
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
@@ -60,9 +53,8 @@ flutter {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version")
-    // يمكن إضافة حزم فايربيس الخاصة بالأندرويد هنا لاحقاً إذا تطلب الأمر
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:${rootProject.extra["kotlin_version"]}")
 }
 
 // التفعيل الصحيح لخدمات جوجل (يجب أن يكون في الأسفل)
-apply plugin: 'com.google.gms.google-services'
+apply(plugin = "com.google.gms.google-services")
