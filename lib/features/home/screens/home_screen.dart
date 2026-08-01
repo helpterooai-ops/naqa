@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/services/storage_service.dart';
-import '../../../core/widgets/glass_container.dart';
-import '../../cleaner/screens/album_selection_screen.dart';
+import 'package:aether_file/core/constants/app_colors.dart';
+import 'package:aether_file/core/services/storage_service.dart';
+import 'package:aether_file/core/widgets/glass_container.dart';
+import 'package:aether_file/features/cleaner/screens/album_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -104,7 +104,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => AlbumSelectionScreen()),
+                        builder: (context) => AlbumSelectionScreen(),
+                      ),
                     );
                   },
                   child: _buildCategoryCard(
@@ -132,7 +133,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => AlbumSelectionScreen()),
+                        builder: (context) => AlbumSelectionScreen(),
+                      ),
                     );
                   },
                   child: _buildCategoryCard(
