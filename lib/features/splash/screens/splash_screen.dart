@@ -1,5 +1,3 @@
-mkdir -p lib/features/splash/screens && cat << 'EOF' > lib/features/splash/screens/splash_screen.dart
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../home/screens/home_screen.dart';
@@ -11,61 +9,57 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _stretchAnimation;
-  late Animation<double> _glowAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
 
+    // إعداد حركة التلاشي والامتداد الفاخرة
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2400),
+      duration: const Duration(milliseconds: 2200),
     );
 
-    // 1. ظهور ناعم للكلمة (من 0% إلى 30% من الوقت)
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.75, curve: Curves.easeIn),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.88, end: 1.05).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.3, curve: Curves.easeIn),
+        curve: Curves.easeOutCubic,
       ),
     );
 
-    // 2. امتداد أفي وتمدد ذهبي (من 30% إلى 75% من الوقت)
-    _stretchAnimation = Tween<double>(begin: 1.0, end: 1.22).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.3, 0.75, curve: Curves.easeInOutCubic),
-      ),
-    );
-
-    // 3. توهج وحركة التدرج الذهبي
-    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.3, 0.8, curve: Curves.easeInOut),
-      ),
-    );
-
+    // بدء الحركة ثم الانتقال بالتلاشي
     _controller.forward();
+    _navigateToHome();
+  }
 
-    // الانتقال التلقائي للصفحة التالية بعد اكتمال التأثير
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const HomeScreen(),
-            transitionsBuilder: (_, animation, __, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            transitionDuration: const Duration(milliseconds: 900),
-          ),
-        );
-      }
-    });
+  Future<void> _navigateToHome() async {
+    await Future.delayed(const Duration(milliseconds: 3000));
+    if (!mounted) return;
+
+    // انتقال سينمائي بتلاشي سلس جداً إلى الشاشة الرئيسية
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 1000),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const HomeScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -77,86 +71,79 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
-      body: Stack(
-        children: [
-          // إضاءة خلفية زجاجية خافته
-          Positioned(
-            top: MediaQuery.of(context).size.height * 0.35,
-            left: MediaQuery.of(context).size.width * 0.2,
-            child: AnimatedBuilder(
-              animation: _glowAnimation,
-              builder: (context, child) {
-                return Container(
-                  width: 240,
-                  height: 240,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFFC59A3F).withOpacity(0.12 * _glowAnimation.value),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFF7D070).withOpacity(0.15 * _glowAnimation.value),
-                        blurRadius: 100,
-                        spreadRadius: 40,
-                      )
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // مركز الشاشة والبطاقة الزجاجية
-          Center(
-            child: FadeTransition(
+      backgroundColor: AppColors.primary, // اللون الزمردي الداكن الفاخر
+      body: Center(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return FadeTransition(
               opacity: _fadeAnimation,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 54, vertical: 36),
-                    decoration: BoxDecoration(
-                      color: AppColors.glassFill,
-                      borderRadius: BorderRadius.circular(32),
-                      border: Border.all(color: AppColors.glassBorder, width: 1),
+              child: Transform.scale(
+                scale: _scaleAnimation.value,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // الشعار الأيقوني المذهب
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.accent.withOpacity(0.08),
+                        border: Border.all(
+                          color: AppColors.accent.withOpacity(0.3),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.folder_special_rounded,
+                        size: 72,
+                        color: AppColors.accent,
+                      ),
                     ),
-                    child: AnimatedBuilder(
-                      animation: _controller,
-                      builder: (context, child) {
-                        return Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.identity()..scale(_stretchAnimation.value, 1.0),
-                          child: ShaderMask(
-                            shaderCallback: (bounds) {
-                              return LinearGradient(
-                                colors: AppColors.goldGradient,
-                                stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-                                transform: GradientRotation(_glowAnimation.value * 3.14 * 2),
-                              ).createShader(bounds);
-                            },
-                            child: const Text(
-                              'نَـــقَــا',
-                              style: TextStyle(
-                                fontFamily: 'IBMPlexSansArabic',
-                                fontSize: 48,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                letterSpacing: 3.0,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                    const SizedBox(height: 32),
+
+                    // النص العربي الذهبي الفاخر مع التدرج اللوني (Golden Metallic Effect)
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [
+                          Color(0xFFFFF1B0), // ذهبي فاتح براق
+                          Color(0xFFD4AF37), // ذهبي فاخر متوسط
+                          Color(0xFFAA7C11), // ذهبي داكن عميق
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ).createShader(bounds),
+                      child: const Text(
+                        'نقـــــاء',
+                        style: TextStyle(
+                          fontFamily: 'IBMPlexSansArabic',
+                          fontSize: 44,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white, // مطلوب لعمل الـ ShaderMask
+                          letterSpacing: 4.0,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 12),
+
+                    // الوصف الفرعي اللاتيني
+                    const Text(
+                      'LUXURY SMART FILE ORGANIZER',
+                      style: TextStyle(
+                        fontFamily: 'IBMPlexSansArabic',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.accent,
+                        letterSpacing: 3.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }
 }
-EOF

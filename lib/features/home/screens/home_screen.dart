@@ -1,4 +1,3 @@
-mkdir -p lib/features/home/screens && cat << 'EOF' > lib/features/home/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
@@ -8,31 +7,23 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'نَقا',
-          style: TextStyle(
-            fontFamily: 'IBMPlexSansArabic',
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
+        title: const Text('نقاء - Naqa'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
       body: const Center(
         child: Text(
-          'الصفحة الرئيسية (قيد الإعداد للخطوات التالية)',
+          'مرحباً بك في تطبيق نقاء',
           style: TextStyle(
-            fontFamily: 'IBMPlexSansArabic',
-            fontSize: 14,
-            color: AppColors.textSecondary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
           ),
         ),
       ),
     );
   }
 }
-EOF
