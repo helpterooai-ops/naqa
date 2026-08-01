@@ -11,6 +11,10 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  permission_handler: ^11.3.1     # لطلب تصاريح الوصول لملفات وصور الجوال
+  storage_space: ^0.2.1          # لقراءة سعة الذاكرة الداخلية الحقيقية للجوال
+  path_provider: ^2.1.2          # للوصول لمسارات النظام المحلية
+  intl: ^0.19.0                  # لتنسيق أحجام الملفات والتوارخ
 
 dev_dependencies:
   flutter_test:

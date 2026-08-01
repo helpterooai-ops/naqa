@@ -1,13 +1,39 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/services/storage_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  StorageInfoData? _storageData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeviceData();
+  }
+
+  Future<void> _initDeviceData() async {
+    await StorageService.requestStoragePermission();
+    StorageInfoData data = await StorageService.getRealStorageInfo();
+    if (mounted) {
+      setState(() {
+        _storageData = data;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark, // خلفية الزمرد الداكن الليلي
+      backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -20,19 +46,18 @@ class HomeScreen extends StatelessWidget {
               fontFamily: 'IBMPlexSansArabic',
               fontSize: 26,
               fontWeight: FontWeight.bold,
-              color: AppColors.accent, // لمسة ذهبية
+              color: AppColors.accent,
               letterSpacing: 2.0,
             ),
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.shield_outlined, color: AppColors.accent),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.search_rounded, color: Colors.white70),
-            onPressed: () {},
+            icon: const Icon(Icons.refresh_rounded, color: AppColors.accent),
+            onPressed: () {
+              setState(() => _isLoading = true);
+              _initDeviceData();
+            },
           ),
           const SizedBox(width: 8),
         ],
@@ -43,12 +68,11 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // بطاقة ملخص الذاكرة الفاخرة (Dark Card)
-            _buildStorageSummaryCard(),
+            // بطاقة التخزين الحقيقية من الجوال
+            _buildRealStorageSummaryCard(),
 
             const SizedBox(height: 28),
 
-            // عنوان أقسام التنظيم
             const Text(
               'التصنيف الذكي',
               style: TextStyle(
@@ -60,7 +84,6 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // شبكة الأقسام الرئيسية (صور، مستندات، خزنة، الخ)
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -70,21 +93,21 @@ class HomeScreen extends StatelessWidget {
               childAspectRatio: 1.25,
               children: [
                 _buildCategoryCard(
-                  title: 'الصور الفاخرة',
-                  subtitle: '1,240 ملف',
+                  title: 'الصور والفيديو',
+                  subtitle: 'معرض الجوال',
                   icon: Icons.photo_library_outlined,
                   color: const Color(0xFF1B3B36),
                 ),
                 _buildCategoryCard(
                   title: 'الخزنة المشفرة',
-                  subtitle: 'محمي بالبصمة',
+                  subtitle: 'حماية بالبصمة',
                   icon: Icons.lock_outline_rounded,
                   color: const Color(0xFF23322E),
                   isAccent: true,
                 ),
                 _buildCategoryCard(
                   title: 'المستندات',
-                  subtitle: '85 ملف',
+                  subtitle: 'الملفات المحلية',
                   icon: Icons.insert_drive_file_outlined,
                   color: const Color(0xFF1B3B36),
                 ),
@@ -96,60 +119,17 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
-
-            const SizedBox(height: 28),
-
-            // أحدث الملفات المنظمة
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'أحدث الأصول',
-                  style: TextStyle(
-                    fontFamily: 'IBMPlexSansArabic',
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    'عرض الكل',
-                    style: TextStyle(
-                      fontFamily: 'IBMPlexSansArabic',
-                      color: AppColors.accent,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-
-            _buildRecentFileTile(
-              title: 'دعوة_زفاف_فاخرة.pdf',
-              date: 'اليوم، 02:30 م',
-              size: '4.2 MB',
-              icon: Icons.picture_as_pdf_outlined,
-            ),
-            _buildRecentFileTile(
-              title: 'جلسة_تصوير_شخصية.raw',
-              date: 'أمس',
-              size: '18.5 MB',
-              icon: Icons.image_outlined,
-            ),
           ],
         ),
       ),
     );
   }
 
-  // بطاقة ملخص السعة بالوضع الليلي
-  Widget _buildStorageSummaryCard() {
+  Widget _buildRealStorageSummaryCard() {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color(0xFF1B3B36), // زمردي فاخر
+        color: const Color(0xFF1B3B36),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: AppColors.accent.withOpacity(0.3),
@@ -170,32 +150,39 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
               Text(
-                'مساحة التخزين المحلية',
+                'ذاكرة الهاتف الفعليه',
                 style: TextStyle(
                   fontFamily: 'IBMPlexSansArabic',
                   fontSize: 14,
                   color: Colors.white70,
                 ),
               ),
-              Icon(Icons.offline_bolt_outlined, color: AppColors.accent, size: 20),
+              Icon(Icons.sd_storage_rounded, color: AppColors.accent, size: 20),
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
-            '42.8 GB / 128 GB',
-            style: TextStyle(
-              fontFamily: 'IBMPlexSansArabic',
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
+
+          _isLoading
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: CircularProgressIndicator(color: AppColors.accent),
+                )
+              : Text(
+                  '${_storageData?.usedSpaceGB ?? 0} GB / ${_storageData?.totalSpaceGB ?? 0} GB',
+                  style: const TextStyle(
+                    fontFamily: 'IBMPlexSansArabic',
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+
           const SizedBox(height: 14),
-          // شريط التقدم الفاخر
+
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
-              value: 0.35,
+              value: _storageData?.usagePercentage ?? 0.0,
               minHeight: 8,
               backgroundColor: Colors.black26,
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accent),
@@ -206,7 +193,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // بطاقات التصنيفات
   Widget _buildCategoryCard({
     required String title,
     required String subtitle,
@@ -259,53 +245,6 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  // عنصر القائمة للملفات الحديثة
-  Widget _buildRecentFileTile({
-    required String title,
-    required String date,
-    required String size,
-    required IconData icon,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF162B27),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.accent.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: AppColors.accent),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontFamily: 'IBMPlexSansArabic',
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        subtitle: Text(
-          '$date • $size',
-          style: const TextStyle(
-            fontFamily: 'IBMPlexSansArabic',
-            fontSize: 12,
-            color: Colors.white38,
-          ),
-        ),
-        trailing: const Icon(Icons.more_vert, color: Colors.white38),
       ),
     );
   }
