@@ -2,6 +2,8 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+    // تم نقل هذه الإضافة هنا لتعمل بشكل صحيح وتمنع الانهيار
+    id("com.google.gms.google-services") 
 }
 
 android {
@@ -20,7 +22,7 @@ android {
 
     defaultConfig {
         applicationId = "com.aldar.net"
-        minSdk = 21
+        minSdk = 23 // تم رفعه إلى 23 لضمان استقرار أكبر مع حزم فايربيس الحديثة
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -36,6 +38,3 @@ android {
 flutter {
     source = "../.."
 }
-
-// ضروري لتفعيل Firebase
-apply(plugin = "com.google.gms.google-services")
