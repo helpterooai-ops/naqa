@@ -6,17 +6,17 @@ class GlassContainer extends StatelessWidget {
   final double borderRadius;
   final double blur;
   final Color? color;
-  final Border? border;
+  final Color? borderColor;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
 
   const GlassContainer({
     super.key,
     required this.child,
-    this.borderRadius = 24.0,
-    this.blur = 15.0,
+    this.borderRadius = 24,
+    this.blur = 20,
     this.color,
-    this.border,
+    this.borderColor,
     this.padding,
     this.margin,
   });
@@ -30,22 +30,14 @@ class GlassContainer extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
           child: Container(
-            padding: padding,
+            padding: padding ?? const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: color ?? Colors.white.withOpacity(0.04),
               borderRadius: BorderRadius.circular(borderRadius),
-              border: border ??
-                  Border.all(
-                    color: const Color(0xFFD4AF37).withOpacity(0.25),
-                    width: 1.2,
-                  ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
-                  blurRadius: 20,
-                  spreadRadius: -5,
-                ),
-              ],
+              border: Border.all(
+                color: borderColor ?? const Color(0xFFD4AF37).withOpacity(0.2),
+                width: 1.2,
+              ),
             ),
             child: child,
           ),

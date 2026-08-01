@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../home/screens/home_screen.dart';
+import 'package:aether_file/core/constants/app_colors.dart';
+import 'package:aether_file/features/home/screens/home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2400),
+      duration: const Duration(milliseconds: 2600),
     );
 
     _stretchAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -34,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.3, curve: Curves.easeIn),
+        curve: const Interval(0.0, 0.35, curve: Curves.easeIn),
       ),
     );
 
@@ -42,11 +42,11 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        Future.delayed(const Duration(milliseconds: 200), () {
+        Future.delayed(const Duration(milliseconds: 250), () {
           if (mounted) {
             Navigator.of(context).pushReplacement(
               PageRouteBuilder(
-                transitionDuration: const Duration(milliseconds: 800),
+                transitionDuration: const Duration(milliseconds: 850),
                 pageBuilder: (context, animation, secondaryAnimation) =>
                     const HomeScreen(),
                 transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -86,14 +86,14 @@ class _SplashScreenState extends State<SplashScreen>
                 _buildStretchedText(_stretchAnimation.value),
                 style: TextStyle(
                   fontFamily: 'IBMPlexSansArabic',
-                  fontSize: 54,
+                  fontSize: 56,
                   fontWeight: FontWeight.bold,
                   color: AppColors.accent,
                   letterSpacing: 2.5 * _stretchAnimation.value,
                   shadows: [
                     Shadow(
-                      color: AppColors.accent.withOpacity(0.4),
-                      blurRadius: 20,
+                      color: AppColors.accent.withOpacity(0.45),
+                      blurRadius: 22,
                     ),
                   ],
                 ),

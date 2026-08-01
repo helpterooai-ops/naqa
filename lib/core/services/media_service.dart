@@ -4,22 +4,26 @@ class LocalMediaFile {
   final String path;
   final String name;
   final double sizeMB;
-  final bool isVideo;
+  final String category; // 'image', 'video', 'document', 'audio', 'apk'
   final DateTime modifiedDate;
+  final String sourceApp;
+  bool isLocked; // التثبيت بالحفل الأخضر
 
   LocalMediaFile({
     required this.path,
     required this.name,
     required this.sizeMB,
-    required this.isVideo,
+    required this.category,
     required this.modifiedDate,
+    required this.sourceApp,
+    this.isLocked = false,
   });
 }
 
 class MediaAlbum {
   final String id;
   final String title;
-  final String path;
+  final String iconType;
   final int itemCount;
   final double totalSizeMB;
   final List<LocalMediaFile> files;
@@ -27,7 +31,7 @@ class MediaAlbum {
   MediaAlbum({
     required this.id,
     required this.title,
-    required this.path,
+    required this.iconType,
     required this.itemCount,
     required this.totalSizeMB,
     required this.files,
@@ -35,110 +39,123 @@ class MediaAlbum {
 }
 
 class MediaService {
-  static final Map<String, List<String>> _albumFolderPaths = {
-    'screenshots': [
-      '/storage/emulated/0/Pictures/Screenshots',
-      '/storage/emulated/0/DCIM/Screenshots',
+  static final Map<String, List<Map<String, String>>> _folderConfigs = {
+    'photos': [
+      {'path': '/storage/emulated/0/Pictures/Screenshots', 'app': 'لقطات الشاشة'},
+      {'path': '/storage/emulated/0/DCIM/Screenshots', 'app': 'لقطات الشاشة'},
+      {'path': '/storage/emulated/0/DCIM/Camera', 'app': 'الكاميرا'},
+      {'path': '/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images', 'app': 'واتساب الرسمي'},
+      {'path': '/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/WhatsApp Images', 'app': 'واتساب الأعمال'},
+      {'path': '/storage/emulated/0/Telegram/Telegram Images', 'app': 'تيليجرام'},
+      {'path': '/storage/emulated/0/Pictures/Instagram', 'app': 'إنستغرام'},
+      {'path': '/storage/emulated/0/Download', 'app': 'التحميلات'},
+      {'path': '/storage/emulated/0/Pictures', 'app': 'صور متنوعة'},
     ],
-    'camera': [
-      '/storage/emulated/0/DCIM/Camera',
+    'videos': [
+      {'path': '/storage/emulated/0/DCIM/Camera', 'app': 'الكاميرا'},
+      {'path': '/storage/emulated/0/DCIM/ScreenRecorder', 'app': 'تسجيل الشاشة'},
+      {'path': '/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Video', 'app': 'فيديو واتساب'},
+      {'path': '/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/WhatsApp Video', 'app': 'فيديو واتساب الأعمال'},
+      {'path': '/storage/emulated/0/Telegram/Telegram Video', 'app': 'فيديو تيليجرام'},
+      {'path': '/storage/emulated/0/Download', 'app': 'التحميلات'},
     ],
-    'whatsapp': [
-      '/storage/emulated/0/Pictures/WhatsApp',
-      '/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images',
+    'docs': [
+      {'path': '/storage/emulated/0/Download', 'app': 'المستندات المحملة'},
+      {'path': '/storage/emulated/0/Documents', 'app': 'المستندات المحفوظة'},
+      {'path': '/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Documents', 'app': 'مستندات واتساب'},
+      {'path': '/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/WhatsApp Documents', 'app': 'مستندات واتساب الأعمال'},
     ],
-    'downloads': [
-      '/storage/emulated/0/Download',
-    ],
-    'pictures': [
-      '/storage/emulated/0/Pictures',
+    'audio': [
+      {'path': '/storage/emulated/0/Music', 'app': 'الموسيقى'},
+      {'path': '/storage/emulated/0/Download', 'app': 'صوتيات التحميل'},
+      {'path': '/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Voice Notes', 'app': 'بصمات واتساب'},
+      {'path': '/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Audio', 'app': 'صوتيات واتساب'},
     ],
   };
 
-  static Future<List<MediaAlbum>> fetchRealAlbums() async {
-    List<MediaAlbum> albums = [];
+  static Future<List<MediaAlbum>> fetchComprehensiveAlbums() async {
+    List<MediaAlbum> result = [];
 
-    var screenshots = await _scanFolders('screenshots', 'لقطات الشاشة', _albumFolderPaths['screenshots']!);
-    if (screenshots.files.isNotEmpty) albums.add(screenshots);
+    var photoAlbum = await _scanCategory('photos', 'الصور والألبومات', 'photo');
+    if (photoAlbum.files.isNotEmpty) result.add(photoAlbum);
 
-    var camera = await _scanFolders('camera', 'صور الكاميرا', _albumFolderPaths['camera']!);
-    if (camera.files.isNotEmpty) albums.add(camera);
+    var videoAlbum = await _scanCategory('videos', 'مقاطع الفيديو', 'video');
+    if (videoAlbum.files.isNotEmpty) result.add(videoAlbum);
 
-    var whatsapp = await _scanFolders('whatsapp', 'صور الواتساب', _albumFolderPaths['whatsapp']!);
-    if (whatsapp.files.isNotEmpty) albums.add(whatsapp);
+    var docsAlbum = await _scanCategory('docs', 'المستندات و PDF', 'doc');
+    if (docsAlbum.files.isNotEmpty) result.add(docsAlbum);
 
-    var downloads = await _scanFolders('downloads', 'التحميلات', _albumFolderPaths['downloads']!);
-    if (downloads.files.isNotEmpty) albums.add(downloads);
+    var audioAlbum = await _scanCategory('audio', 'الصوتيات والبصمات', 'audio');
+    if (audioAlbum.files.isNotEmpty) result.add(audioAlbum);
 
-    var pictures = await _scanFolders('pictures', 'جميع الصور', _albumFolderPaths['pictures']!);
-    if (pictures.files.isNotEmpty) albums.add(pictures);
-
-    List<LocalMediaFile> largeFiles = [];
-    double largeTotalMB = 0;
-    for (var album in albums) {
-      for (var file in album.files) {
-        if (file.sizeMB >= 10.0) {
-          largeFiles.add(file);
-          largeTotalMB += file.sizeMB;
+    List<LocalMediaFile> allLarge = [];
+    double largeMB = 0;
+    for (var alb in result) {
+      for (var f in alb.files) {
+        if (f.sizeMB >= 10.0) {
+          allLarge.add(f);
+          largeMB += f.sizeMB;
         }
       }
     }
-    if (largeFiles.isNotEmpty) {
-      albums.insert(
+    if (allLarge.isNotEmpty) {
+      result.insert(
         0,
         MediaAlbum(
-          id: 'large',
-          title: 'الملفات الكبيرة (+10MB)',
-          path: 'large_files',
-          itemCount: largeFiles.length,
-          totalSizeMB: double.parse(largeTotalMB.toStringAsFixed(1)),
-          files: largeFiles,
+          id: 'large_files',
+          title: 'الملفات الكبيرة وتراكمات الذاكرة (+10MB)',
+          iconType: 'large',
+          itemCount: allLarge.length,
+          totalSizeMB: double.parse(largeMB.toStringAsFixed(1)),
+          files: allLarge,
         ),
       );
     }
 
-    return albums;
+    return result;
   }
 
-  static Future<MediaAlbum> _scanFolders(String id, String title, List<String> paths) async {
+  static Future<MediaAlbum> _scanCategory(String categoryKey, String title, String iconType) async {
     List<LocalMediaFile> files = [];
     double totalMB = 0;
+    var configList = _folderConfigs[categoryKey] ?? [];
 
-    for (String path in paths) {
-      Directory dir = Directory(path);
+    for (var config in configList) {
+      String folderPath = config['path']!;
+      String appSource = config['app']!;
+      Directory dir = Directory(folderPath);
+
       if (await dir.exists()) {
         try {
           await for (FileSystemEntity entity in dir.list(recursive: false, followLinks: false)) {
             if (entity is File) {
-              String filePath = entity.path;
-              String lower = filePath.toLowerCase();
+              String path = entity.path;
+              String lower = path.toLowerCase();
 
-              bool isImage = lower.endsWith('.jpg') ||
-                  lower.endsWith('.jpeg') ||
-                  lower.endsWith('.png') ||
-                  lower.endsWith('.webp');
+              bool isImg = lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png') || lower.endsWith('.webp');
+              bool isVid = lower.endsWith('.mp4') || lower.endsWith('.mkv') || lower.endsWith('.mov') || lower.endsWith('.3gp');
+              bool isDoc = lower.endsWith('.pdf') || lower.endsWith('.doc') || lower.endsWith('.docx') || lower.endsWith('.txt') || lower.endsWith('.xlsx');
+              bool isAud = lower.endsWith('.mp3') || lower.endsWith('.m4a') || lower.endsWith('.ogg') || lower.endsWith('.opus') || lower.endsWith('.wav');
+              bool isApk = lower.endsWith('.apk') || lower.endsWith('.zip') || lower.endsWith('.rar');
 
-              bool isVideo = lower.endsWith('.mp4') ||
-                  lower.endsWith('.mkv') ||
-                  lower.endsWith('.mov');
+              String detectedCategory = 'other';
+              if (isImg) detectedCategory = 'image';
+              else if (isVid) detectedCategory = 'video';
+              else if (isDoc) detectedCategory = 'document';
+              else if (isAud) detectedCategory = 'audio';
+              else if (isApk) detectedCategory = 'apk';
 
-              if (isImage || isVideo) {
-                try {
-                  int bytes = entity.lengthSync();
-                  double size = bytes / (1024 * 1024);
-                  totalMB += size;
-
-                  files.add(LocalMediaFile(
-                    path: filePath,
-                    name: filePath.split('/').last,
-                    sizeMB: double.parse(size.toStringAsFixed(1)),
-                    isVideo: isVideo,
-                    modifiedDate: entity.lastModifiedSync(),
-                  ));
-                } catch (_) {}
+              if (categoryKey == 'photos' && isImg) {
+                _addFileToList(entity, path, detectedCategory, appSource, files, (sz) => totalMB += sz);
+              } else if (categoryKey == 'videos' && isVid) {
+                _addFileToList(entity, path, detectedCategory, appSource, files, (sz) => totalMB += sz);
+              } else if (categoryKey == 'docs' && (isDoc || isApk)) {
+                _addFileToList(entity, path, detectedCategory, appSource, files, (sz) => totalMB += sz);
+              } else if (categoryKey == 'audio' && isAud) {
+                _addFileToList(entity, path, detectedCategory, appSource, files, (sz) => totalMB += sz);
               }
             }
-            if (files.length >= 150) break;
+            if (files.length >= 250) break;
           }
         } catch (_) {}
       }
@@ -147,20 +164,44 @@ class MediaService {
     files.sort((a, b) => b.modifiedDate.compareTo(a.modifiedDate));
 
     return MediaAlbum(
-      id: id,
+      id: categoryKey,
       title: title,
-      path: paths.first,
+      iconType: iconType,
       itemCount: files.length,
       totalSizeMB: double.parse(totalMB.toStringAsFixed(1)),
       files: files,
     );
   }
 
+  static void _addFileToList(
+    File entity,
+    String path,
+    String category,
+    String sourceApp,
+    List<LocalMediaFile> list,
+    Function(double) onSize,
+  ) {
+    try {
+      int len = entity.lengthSync();
+      double mb = len / (1024 * 1024);
+      onSize(mb);
+      list.add(LocalMediaFile(
+        path: path,
+        name: path.split('/').last,
+        sizeMB: double.parse(mb.toStringAsFixed(1)),
+        category: category,
+        modifiedDate: entity.lastModifiedSync(),
+        sourceApp: sourceApp,
+        isLocked: false,
+      ));
+    } catch (_) {}
+  }
+
   static Future<bool> deleteRealFile(String filePath) async {
     try {
-      File file = File(filePath);
-      if (await file.exists()) {
-        await file.delete();
+      File f = File(filePath);
+      if (await f.exists()) {
+        await f.delete();
         return true;
       }
     } catch (_) {}

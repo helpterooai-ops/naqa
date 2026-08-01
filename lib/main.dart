@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'core/constants/app_colors.dart';
-import 'features/splash/screens/splash_screen.dart';
+import 'package:aether_file/core/constants/app_colors.dart';
+import 'package:aether_file/features/splash/screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ضبط شريط النظام العلوي والسفلي ليتوافق مع التصميم المظلم الفاخر
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
