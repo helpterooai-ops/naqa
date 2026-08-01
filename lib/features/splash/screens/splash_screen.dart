@@ -1,4 +1,4 @@
-import 'package/flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../home/screens/home_screen.dart';
 
@@ -73,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark, // خلفية ليلية فاخرة
+      backgroundColor: AppColors.backgroundDark,
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,
@@ -83,9 +83,9 @@ class _SplashScreenState extends State<SplashScreen>
               child: ShaderMask(
                 shaderCallback: (bounds) => const LinearGradient(
                   colors: [
-                    Color(0xFFFFF1B0), // ذهبي براق
-                    Color(0xFFD4AF37), // ذهبي فاخر
-                    Color(0xFFAA7C11), // ذهبي داكن
+                    Color(0xFFFFF1B0),
+                    Color(0xFFD4AF37),
+                    Color(0xFFAA7C11),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
